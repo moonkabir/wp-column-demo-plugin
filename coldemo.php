@@ -187,3 +187,67 @@ function coldemo_thumbnail_filter_data($wpquery)
     }
 }
 add_action('pre_get_posts', 'coldemo_thumbnail_filter_data');
+
+
+
+function coldemo_wc_filter()
+{
+    if (isset($_GET['post_type']) && $_GET['post_type'] != 'post') {  //display only post page
+        return;
+    }
+    $filter_value = isset($_GET['WCFILTER']) ? $_GET['WCFILTER'] : '';
+    $value = array(
+        '0' => __('Word Count', 'column_demo'),
+        '1' => __('Above 400', 'column_demo'),
+        '2' => __('200 to 400', 'column_demo'),
+        '3' => __('Below 200', 'column_demo'),
+    );
+?>
+    <select name="WCFILTER">
+        <?php
+        foreach ($value as $key => $value) {
+            printf("<option value = '%s' %s>%s</option>", $key, $key == $filter_value ? "selected" : "", $value);
+        }
+        ?>
+    </select>
+<?php
+}
+add_action('restrict_manage_posts', 'coldemo_wc_filter');
+
+
+function coldemo_wc_filter_data($wpquery)
+{
+    if (!is_admin()) {
+        return;
+    }
+    $filter_value = isset($_GET['WCFILTER']) ? $_GET['WCFILTER'] : '';
+    if ('1' == $filter_value) {
+        $wpquery->set('meta_query', array(
+            array(
+                'key'       => 'wordn',
+                'value'     =>  400,
+                'compare'   => '>=',
+                'type'      => 'NUMERIC'
+            )
+        ));
+    } elseif ('2' == $filter_value) {
+        $wpquery->set('meta_query', array(
+            array(
+                'key'       => 'wordn',
+                'value'     =>  array(200, 400),
+                'compare'   => 'BETWEEN',
+                'type'      => 'NUMERIC'
+            )
+        ));
+    } elseif ('3' == $filter_value) {
+        $wpquery->set('meta_query', array(
+            array(
+                'key'       => 'wordn',
+                'value'     =>  200,
+                'compare'   => '<=',
+                'type'      => 'NUMERIC'
+            )
+        ));
+    }
+}
+add_action('pre_get_posts', 'coldemo_wc_filter_data');
